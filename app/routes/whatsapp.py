@@ -5,6 +5,7 @@ from fastapi import APIRouter, Request, HTTPException
 from fastapi.responses import PlainTextResponse
 
 from app.core.config import settings
+from app.services.whatsapp_service import process_whatsapp_message
 
 router = APIRouter()
 
@@ -26,7 +27,9 @@ async def whatsapp_webhook(request: Request):
                     from_number = message.get("from")
                     message_body = message.get("text", {}).get("body", "")
                     print(f"Mensaje de {from_number}: {message_body}")
-                    # Aquí puedes procesar el mensaje o enviar una respuesta
+
+                    # Delegar el procesamiento del mensaje a un servicio
+                    await process_whatsapp_message(from_number, message_body)
 
         return {"message": "Evento recibido correctamente"}
 
@@ -48,6 +51,7 @@ async def send_whatsapp_message(to: str, body: str):
 
     payload = {
         "messaging_product": "whatsapp",
+        "recipient_type": "individual",
         "to": to,
         "type": "text",
         "text": {"body": body},
