@@ -3,8 +3,8 @@ from logging.config import fileConfig
 from alembic import context
 from sqlalchemy import create_engine
 from app.models.base import Base
-from app.models.menu import Category, MenuItem, Extra
-from app.models.sessions import Session, SessionLog
+from app.models.menu import *
+from app.models.sessions import *
 from app.core.config import settings
 
 # Configuración de logging

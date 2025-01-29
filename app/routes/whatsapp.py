@@ -1,40 +1,47 @@
-import json
+import asyncio
+import logging
 import requests
 
 from fastapi import APIRouter, Request, HTTPException
-from fastapi.responses import PlainTextResponse
+from fastapi import Depends
+from fastapi.responses import JSONResponse, PlainTextResponse
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
+from app.schemas.whatsapp import WhatsAppPayload
 from app.services.whatsapp_service import process_whatsapp_message
+from app.core.dependencies import get_db
 
 router = APIRouter()
-
+logger = logging.getLogger(__name__)
 
 @router.post("/webhook")
-async def whatsapp_webhook(request: Request):
+async def whatsapp_webhook(
+    payload: WhatsAppPayload,
+    db: AsyncSession = Depends(get_db),
+):
     """
     Endpoint para manejar mensajes entrantes de WhatsApp.
     """
     try:
-        payload = await request.json()
-        print(f"Payload recibido: {json.dumps(payload, indent=4)}")
-
-        for entry in payload.get("entry", []):
-            for change in entry.get("changes", []):
-                value = change.get("value")
+        tasks = []
+        for entry in payload.entry:
+            for change in entry.changes:
+                value = change.value
                 messages = value.get("messages", [])
                 for message in messages:
                     from_number = message.get("from")
                     message_body = message.get("text", {}).get("body", "")
-                    print(f"Mensaje de {from_number}: {message_body}")
+                    # Crear tareas para procesar cada mensaje
+                    tasks.append(process_whatsapp_message(from_number, message_body, db))
+        
+        await asyncio.gather(*tasks)
 
-                    # Delegar el procesamiento del mensaje a un servicio
-                    await process_whatsapp_message(from_number, message_body)
-
-        return {"message": "Evento recibido correctamente"}
+        return JSONResponse(status_code=200, content={"status": "success"})
 
     except Exception as e:
-        raise HTTPException(status_code=400, detail=f"Error procesando el evento: {e}")
+        logger.error(f"Error procesando el evento: {e}", exc_info=True)
+        raise HTTPException(status_code=400, detail="Error procesando el evento")
 
 
 @router.post("/send")

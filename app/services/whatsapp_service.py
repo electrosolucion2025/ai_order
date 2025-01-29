@@ -18,7 +18,7 @@ async def process_whatsapp_message(
 
     # Busca o crea una sesión activa para el usuario
     session = await get_or_create_session(from_number, db)
-
+    
     # Respuesta ficticia del bot
     bot_response = "¡Hola! Soy un bot de WhatsApp 🤖"
 
