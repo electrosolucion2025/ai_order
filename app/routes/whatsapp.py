@@ -15,6 +15,7 @@ from app.core.dependencies import get_db
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+
 @router.post("/webhook")
 async def whatsapp_webhook(
     payload: WhatsAppPayload,
@@ -33,8 +34,10 @@ async def whatsapp_webhook(
                     from_number = message.get("from")
                     message_body = message.get("text", {}).get("body", "")
                     # Crear tareas para procesar cada mensaje
-                    tasks.append(process_whatsapp_message(from_number, message_body, db))
-        
+                    tasks.append(
+                        process_whatsapp_message(from_number, message_body, db)
+                    )
+
         await asyncio.gather(*tasks)
 
         return JSONResponse(status_code=200, content={"status": "success"})

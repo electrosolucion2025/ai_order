@@ -20,9 +20,8 @@ class Session(Base):
         default=datetime.now(timezone.utc).replace(tzinfo=None),
         onupdate=datetime.now(timezone.utc).replace(tzinfo=None),
     )  # Última actualización
-    logs = relationship(
-        "SessionLog", back_populates="session"
-    )
+    logs = relationship("SessionLog", back_populates="session")
+
 
 class SessionLog(Base):
     __tablename__ = "session_logs"

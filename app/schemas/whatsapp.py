@@ -3,7 +3,9 @@ from typing import List, Optional
 
 
 class WhatsAppMessage(BaseModel):
-    from_: str = Field(..., alias="from")  # Alias para evitar conflictos con palabras clave de Python
+    from_: str = Field(
+        ..., alias="from"
+    )  # Alias para evitar conflictos con palabras clave de Python
     id: str
     timestamp: str
     text: Optional[dict] = None  # Mensaje de texto con el contenido

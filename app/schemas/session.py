@@ -13,6 +13,7 @@ class SessionLogSchema(BaseModel):
     class Config:
         orm_mode = True
 
+
 class SessionSchema(BaseModel):
     id: int
     user_id: str = Field(..., example="34607227417")  # Identificador del usuario
