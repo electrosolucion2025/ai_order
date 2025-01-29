@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from sqlalchemy.exc import SQLAlchemyError
 from app.core.config import settings
 from app.core.dependencies import engine
-from app.routes import menu
+from app.routes import menu, whatsapp
 
 
 async def lifespan(app: FastAPI):
@@ -31,7 +31,10 @@ app = FastAPI(
 )
 
 # Registrar rutas
-app.include_router(menu.router, prefix=f"{settings.API_VERSION}", tags=["Menu"])
+app.include_router(menu.router, prefix=f"{settings.API_VERSION}/menu", tags=["Menu"])
+app.include_router(
+    whatsapp.router, prefix=f"{settings.API_VERSION}/whatsapp", tags=["WhatsApp"]
+)
 
 
 @app.get("/")

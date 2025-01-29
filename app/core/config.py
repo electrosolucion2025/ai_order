@@ -20,6 +20,9 @@ class Settings(BaseSettings):
     WHATSAPP_API_URL: str = os.getenv("WHATSAPP_API_URL")
     WHATSAPP_TOKEN: str = os.getenv("WHATSAPP_TOKEN")
 
+    # Configuración del webhook de WhatsApp
+    VERIFY_TOKEN: str = os.getenv("VERIFY_TOKEN")
+
     # Configuración de OpenAI
     OPENAI_API_KEY: str = os.getenv("OPENAI_API_KEY")
 
