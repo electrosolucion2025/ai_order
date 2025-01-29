@@ -22,7 +22,6 @@ class SessionSchema(BaseModel):
     created_at: datetime = Field(..., example="2025-01-29T17:56:23")
     updated_at: datetime = Field(..., example="2025-01-29T18:00:00")
     logs: List[SessionLogSchema] = []  # Relación con SessionLog
-    message_logs: List[MessageLogSchema] = []  # Relación con MessageLog
 
     class Config:
         orm_mode = True
