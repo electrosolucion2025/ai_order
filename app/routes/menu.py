@@ -6,10 +6,12 @@ from app.schemas.menu import MenuSchema
 
 router = APIRouter()
 
+
 @router.post("/menu/upload", status_code=201)
 async def upload_menu(menu: MenuSchema, db: AsyncSession = Depends(get_db)):
     """
-    Endpoint para cargar un menú completo con categorías y productos en la base de datos.
+    Endpoint para cargar un menú completo con categorías
+    y productos en la base de datos.
     """
     try:
         for category_data in menu.categories:
