@@ -5,6 +5,7 @@ from sqlalchemy import create_engine
 from app.models.base import Base
 from app.models.menu import *
 from app.models.sessions import *
+from app.models.whatsapp import *
 from app.core.config import settings
 
 # Configuración de logging

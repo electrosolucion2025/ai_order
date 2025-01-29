@@ -24,18 +24,24 @@ async def lifespan(app: FastAPI):
     print("Conexión a la base de datos cerrada.")
 
 
-app = FastAPI(
+def create_app() -> FastAPI:
+    """
+    Crear la aplicación FastAPI.
+    """
+    app = FastAPI(
     lifespan=lifespan,
     title=settings.PROJECT_NAME,
     version=settings.API_VERSION,
 )
+    # Registrar rutas
+    app.include_router(menu.router, prefix=f"{settings.API_VERSION}/menu", tags=["Menu"])
+    app.include_router(
+        whatsapp.router, prefix=f"{settings.API_VERSION}/whatsapp", tags=["WhatsApp"]
+    )
+    
+    return app
 
-# Registrar rutas
-app.include_router(menu.router, prefix=f"{settings.API_VERSION}/menu", tags=["Menu"])
-app.include_router(
-    whatsapp.router, prefix=f"{settings.API_VERSION}/whatsapp", tags=["WhatsApp"]
-)
-
+app = create_app()
 
 @app.get("/")
 async def read_root():
@@ -45,4 +51,9 @@ async def read_root():
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("app.main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run(
+        "app.main:app",
+        host=settings.HOST,
+        port=settings.PORT,
+        reload=True
+    )

@@ -1,4 +1,7 @@
+from fastapi import HTTPException
+import requests
 from sqlalchemy.ext.asyncio import AsyncSession
+from app.core.config import settings
 
 from app.services.session_service import (
     close_session,
@@ -45,3 +48,23 @@ async def process_whatsapp_message(
         await update_context(session.id, {"conversation": context["conversation"]}, db)
         await close_session(from_number, db)
         await send_whatsapp_message(from_number, "¡Hasta luego! 👋")
+
+async def send_message(to: str, body: str):
+    url = settings.WHATSAPP_API_URL
+    headers = {
+        "Authorization": f"Bearer {settings.WHATSAPP_TOKEN}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "messaging_product": "whatsapp",
+        "recipient_type": "individual",
+        "to": to,
+        "type": "text",
+        "text": {"body": body},
+    }
+    response = requests.post(url, json=payload, headers=headers)
+    if response.status_code != 200:
+        raise HTTPException(
+            status_code=response.status_code,
+            detail=f"Error enviando mensaje: {response.text}",
+        )
