@@ -10,9 +10,14 @@ async def initialize_context(menu: dict) -> str:
     """
     Inicializa el contexto de la conversación.
     """
+    if "menu" in menu:  # Evita duplicar la clave "menu"
+        menu_data = menu["menu"]
+    else:
+        menu_data = menu
+    
     return json.dumps(
         {
-            "menu": menu,  # Para guardar el menú actual
+            "menu": menu_data,  # Para guardar el menú actual
             "conversation": [],  # Para guardar la conversación
             "current_order": None,  # Para guardar el pedido actual
         }
