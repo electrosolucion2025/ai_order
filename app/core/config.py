@@ -19,6 +19,7 @@ class Settings(BaseSettings):
     WHATSAPP_TOKEN: str = Field(
         ..., env="WHATSAPP_TOKEN", example="your-whatsapp-token"
     )
+    WHATSAPP_VERSION_API: str = Field(..., env="WHATSAPP_VERSION_API", example="v22.0")
 
     # Configuración del webhook de WhatsApp
     VERIFY_TOKEN: str = Field(..., env="VERIFY_TOKEN", example="your-verify-token")

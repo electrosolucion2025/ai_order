@@ -48,7 +48,22 @@ async def whatsapp_webhook(
                         continue  # Skip already processed messages
 
                     from_number = message.get("from")
-                    message_body = message.get("text", {}).get("body", "")
+
+                    # Verificar si el mensaje es un mensaje de texto
+                    if "text" in message:
+                        message_body = message["text"].get("body", "").strip()
+
+                    # Verificar si el mensaje es un mensaje de audio
+                    elif "audio" in message:
+                        media_id = message["audio"].get("id")
+                        if not media_id:
+                            continue
+
+                        message_body = {"type": "audio", "media_id": media_id}
+
+                    else:
+                        continue
+
                     # Crear tareas para procesar cada mensaje
                     tasks.append(
                         process_whatsapp_message(from_number, message_body, db)

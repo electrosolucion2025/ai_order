@@ -1,8 +1,21 @@
+import logging
+
 from fastapi import FastAPI
 from sqlalchemy.exc import SQLAlchemyError
 from app.core.config import settings
 from app.core.dependencies import engine
 from app.routes import menu, whatsapp
+
+
+# 🔥 Configuración del Logger
+logging.basicConfig(
+    level=logging.DEBUG,  # Asegurar que todo se imprima
+    format="%(asctime)s - %(levelname)s - %(message)s",
+    datefmt="%Y-%m-%d %H:%M:%S",
+    handlers=[logging.StreamHandler()],
+)
+
+logger = logging.getLogger(__name__)
 
 
 async def lifespan(app: FastAPI):
@@ -12,16 +25,15 @@ async def lifespan(app: FastAPI):
     try:
         # Startup: Conectar y verificar la conexión a la base de datos
         async with engine.begin():
-            print("Conexión a la base de datos establecida.")
+            logger.info("✅ Conexión a la base de datos establecida.")
     except SQLAlchemyError as e:
-        print(f"Error al conectar a la base de datos: {e}")
+        logger.error(f"❌ Error al conectar a la base de datos: {e}", exc_info=True)
         raise e
-
     yield  # Yield vacío para manejar el ciclo de vida
 
     # Shutdown: Liberar recursos
     await engine.dispose()
-    print("Conexión a la base de datos cerrada.")
+    logger.info("🛑 Conexión a la base de datos cerrada.")
 
 
 def create_app() -> FastAPI:

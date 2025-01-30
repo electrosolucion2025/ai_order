@@ -14,7 +14,7 @@ async def initialize_context(menu: dict) -> str:
         menu_data = menu["menu"]
     else:
         menu_data = menu
-    
+
     return json.dumps(
         {
             "menu": menu_data,  # Para guardar el menú actual
