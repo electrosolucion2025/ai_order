@@ -1,6 +1,5 @@
 import asyncio
 import logging
-import requests
 
 from fastapi import APIRouter, Request, HTTPException
 from fastapi import Depends
@@ -17,14 +16,17 @@ from app.models.whatsapp import ProcessedMessage
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+
 async def is_message_processed(db: AsyncSession, message_id: str) -> bool:
     result = await db.execute(select(ProcessedMessage).filter_by(message_id=message_id))
     return result.scalars().first() is not None
+
 
 async def mark_message_as_processed(db: AsyncSession, message_id: str):
     processed_message = ProcessedMessage(message_id=message_id)
     db.add(processed_message)
     await db.commit()
+
 
 @router.post("/webhook")
 async def whatsapp_webhook(
@@ -61,6 +63,7 @@ async def whatsapp_webhook(
         logger.error(f"Error procesando el evento: {e}", exc_info=True)
         raise HTTPException(status_code=400, detail="Error procesando el evento")
 
+
 @router.post("/send")
 async def send_whatsapp_message(to: str, body: str):
     """
@@ -68,6 +71,7 @@ async def send_whatsapp_message(to: str, body: str):
     """
     await send_message(to, body)
     return {"message": "Mensaje enviado correctamente"}
+
 
 @router.get("/webhook")
 async def verify_webhook(request: Request):

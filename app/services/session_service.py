@@ -91,7 +91,9 @@ async def get_context(session_id: int, db: AsyncSession) -> dict:
     """
     Obtiene el contexto de la conversación.
     """
-    result = await db.execute(select(Session).filter(Session.id == session_id))
+    result = await db.execute(
+        select(Session).filter(Session.id == session_id, Session.active)
+    )
     session = result.scalar()
 
     if session:
