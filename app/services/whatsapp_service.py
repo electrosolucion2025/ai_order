@@ -1,14 +1,12 @@
-from fastapi import HTTPException
 import requests
-from sqlalchemy.ext.asyncio import AsyncSession
-from app.core.config import settings
 
+from fastapi import HTTPException
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.core.config import settings
+from app.services.log_manager_service import save_message_log
 from app.services.openai_service import generate_openai_response
-from app.services.session_service import (
-    close_session,
-    get_or_create_session,
-    save_message_log,
-)
+from app.services.session_manager_service import close_session, get_or_create_session
 
 
 async def process_whatsapp_message(

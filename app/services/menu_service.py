@@ -1,8 +1,9 @@
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import selectinload
-from app.models.menu import Category, MenuItem
 from typing import List, Dict
+
+from app.models.menu import Category, MenuItem
 
 
 async def fetch_menu_as_json(db: AsyncSession) -> List[Dict]:

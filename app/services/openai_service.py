@@ -1,8 +1,10 @@
 import openai
 
-from app.core.config import settings
 from sqlalchemy.ext.asyncio import AsyncSession
-from app.services.session_service import prepare_prompt, update_context, get_context
+
+from app.core.config import settings
+from app.services.context_manager_service import get_context, update_context
+from app.services.prompt_manager_service import prepare_prompt
 
 # Configurar la API de OpenAI
 openai.api_key = settings.OPENAI_API_KEY
@@ -28,6 +30,7 @@ async def generate_openai_response(
             {"role": "system", "content": prompt},
             {"role": "user", "content": user_message},
         ],
+        temperature=0.3,
     )
 
     bot_response = response.choices[0].message.content
