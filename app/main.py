@@ -50,7 +50,9 @@ def create_app() -> FastAPI:
         menu.router, prefix=f"{settings.API_VERSION}/menu", tags=["Menu"]
     )
     app.include_router(
-        whatsapp.router, prefix=f"{settings.API_VERSION}/whatsapp", tags=["WhatsApp"]
+        whatsapp.router,
+        prefix=f"{settings.API_VERSION}/whatsapp",
+        tags=["WhatsApp"],
     )
 
     return app

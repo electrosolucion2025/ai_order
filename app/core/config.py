@@ -14,7 +14,9 @@ class Settings(BaseSettings):
 
     # Configuración de WhatsApp API
     WHATSAPP_API_URL: str = Field(
-        ..., env="WHATSAPP_API_URL", example="https://api.whatsapp.com/v1/messages"
+        ...,
+        env="WHATSAPP_API_URL",
+        example="https://api.whatsapp.com/v1/messages",
     )
     WHATSAPP_TOKEN: str = Field(
         ..., env="WHATSAPP_TOKEN", example="your-whatsapp-token"

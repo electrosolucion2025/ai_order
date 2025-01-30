@@ -11,7 +11,10 @@ from app.core.config import settings
 from app.core.dependencies import get_db
 from app.models.whatsapp import ProcessedMessage
 from app.schemas.whatsapp import WhatsAppPayload
-from app.services.whatsapp_service import process_whatsapp_message, send_message
+from app.services.whatsapp_service import (
+    process_whatsapp_message,
+    send_message,
+)
 
 router = APIRouter()
 logger = logging.getLogger(__name__)

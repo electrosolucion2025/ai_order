@@ -1,17 +1,21 @@
-from decimal import Decimal
 import logging
 import openai
 import os
 import re
 import requests
 
+from decimal import Decimal
 from fastapi import HTTPException
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.core.config import settings
 from app.services.log_manager_service import save_message_log
 from app.services.openai_service import generate_openai_response
-from app.services.session_manager_service import close_session, get_or_create_session
+from app.services.order_service import create_order
+from app.services.session_manager_service import (
+    close_session,
+    get_or_create_session,
+)
 
 # 🔥 Configuración del Logger
 logger = logging.getLogger("whatsapp_service")
@@ -50,9 +54,8 @@ async def process_whatsapp_message(from_number: str, message_body, db: AsyncSess
                 )
                 return
 
-            message_body = (
-                transcribed_text  # Usamos la transcripción como el mensaje del usuario
-            )
+            # Usamos la transcripción como el mensaje del usuario
+            message_body = transcribed_text
 
         else:
             message_body = message_body.strip()
@@ -62,6 +65,46 @@ async def process_whatsapp_message(from_number: str, message_body, db: AsyncSess
 
         # Obtener respuesta de OpenAI
         bot_response = await generate_openai_response(session.id, message_body, db)
+
+        # Verificar si el mensaje es una orden
+        if "Resumen del Pedido:" in bot_response:
+            parsed_order = parse_order_details(bot_response)
+
+            if parsed_order:
+                # Guardar el pedido en la base de datos
+                # (no iniciar nueva transacción si ya hay una activa)
+                if not db.in_transaction():
+                    async with db.begin():
+                        order, order_id_formatted = await create_order(
+                            from_number, parsed_order, db
+                        )
+
+                else:
+                    order, order_id_formatted = await create_order(
+                        from_number, parsed_order, db
+                    )
+
+                if order:
+                    # 🔍 **Reemplazar el total en bot_response**
+                    bot_response = re.sub(
+                        r"Total: \d+(\.\d+)? EUR",
+                        f"Total: {order.total:.2f} EUR",
+                        bot_response,
+                    )
+
+                    confirmation_msg = (
+                        f"✅ Tu pedido ha sido registrado con éxito.\n"
+                        f"Pedido N° {order_id_formatted}\n"
+                        f"📌 Si necesitas hacer cambios, avísame antes de realizar el pago.\n"
+                        f"🚀 En cuanto se registre el pago, nos pondremos manos a la obra.\n"
+                    )
+
+                    await send_whatsapp_message(from_number, confirmation_msg)
+
+                else:
+                    await send_whatsapp_message(
+                        from_number, "❌ Error al registrar el pedido."
+                    )
 
         # Guardar en el historial de conversación
         await save_message_log(session.id, message_body, bot_response, db)
@@ -186,6 +229,8 @@ def parse_order_details(order_text: str) -> dict:
                 last_plato["sin"].append(nombre_sin)
 
         order_data["total"] = round(order_data["total"], 2)
+
+        logger.info(f"✅ Pedido parseado: {order_data}")
         return order_data
 
     except Exception as e:

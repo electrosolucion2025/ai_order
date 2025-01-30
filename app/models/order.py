@@ -1,53 +1,65 @@
-from sqlalchemy import Column, Integer, String, ForeignKey, Numeric, DateTime, Boolean
+from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Numeric
 from sqlalchemy.orm import relationship
-from sqlalchemy.sql import func
+from datetime import datetime, timezone
 from app.models.base import Base
 
+
 class Order(Base):
-    """
-    Representa un pedido realizado en el restaurante.
-    """
     __tablename__ = "orders"
 
     id = Column(Integer, primary_key=True, index=True)
-    mesa = Column(Integer, nullable=False)  # Número de mesa asociada al pedido
-    total = Column(Numeric(10, 2), nullable=False, default=0.0)  # Total del pedido
+    table_number = Column(Integer, nullable=False)  # Número de mesa
+    customer_phone = Column(String(15), nullable=False)  # Nuevo campo
     status = Column(String, default="pendiente")  # Estado: pendiente, pagado, cancelado
-    created_at = Column(DateTime, server_default=func.now())  # Fecha de creación del pedido
+    total = Column(Numeric(10, 2), nullable=False)  # Total del pedido
+    created_at = Column(
+        DateTime, default=datetime.now(timezone.utc).replace(tzinfo=None)
+    )
+    updated_at = Column(
+        DateTime,
+        default=datetime.now(timezone.utc).replace(tzinfo=None),
+        onupdate=datetime.now(timezone.utc).replace(tzinfo=None),
+    )
 
-    # Relación con los ítems del pedido
-    items = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
+    # Relación con los elementos del pedido
+    order_items = relationship("OrderItem", back_populates="order")
 
-    # Relación con el pago del pedido
-    payment = relationship("Payment", back_populates="order", uselist=False)
+    # Relación con el pago
+    payment = relationship("Payment", uselist=False, back_populates="order")
+
 
 class OrderItem(Base):
-    """
-    Representa un producto dentro de un pedido.
-    """
     __tablename__ = "order_items"
 
     id = Column(Integer, primary_key=True, index=True)
-    order_id = Column(Integer, ForeignKey("orders.id"), nullable=False)  # Pedido al que pertenece
-    nombre = Column(String, nullable=False)  # Nombre del producto
-    precio = Column(Numeric(10, 2), nullable=False)  # Precio unitario del producto
-    cantidad = Column(Integer, nullable=False)  # Cantidad de productos comprados
-    subtotal = Column(Numeric(10, 2), nullable=False)  # Precio total de esta línea
+    order_id = Column(Integer, ForeignKey("orders.id"), nullable=False)
+    product_name = Column(String, nullable=False)  # Nombre del producto
+    unit_price = Column(Numeric(10, 2), nullable=False)  # Precio unitario
+    quantity = Column(Integer, nullable=False)  # Cantidad
+    subtotal = Column(Numeric(10, 2), nullable=False)  # Precio total por este ítem
+
+    # Extras y modificaciones
+    extras = Column(String, nullable=True)  # Guardaremos los extras como un JSON string
+    exclusions = Column(String, nullable=True)  # Ingredientes excluidos
 
     # Relación con el pedido
-    order = relationship("Order", back_populates="items")
+    order = relationship("Order", back_populates="order_items")
+
 
 class Payment(Base):
-    """
-    Representa el pago de un pedido a través de RedSys.
-    """
     __tablename__ = "payments"
 
     id = Column(Integer, primary_key=True, index=True)
-    order_id = Column(Integer, ForeignKey("orders.id"), nullable=False)  # Pedido asociado
-    redsys_payment_id = Column(String, unique=True, nullable=True)  # ID de transacción de RedSys
-    status = Column(String, default="pendiente")  # Estado del pago (pendiente, completado, fallido)
-    created_at = Column(DateTime, server_default=func.now())  # Fecha del pago
+    order_id = Column(Integer, ForeignKey("orders.id"), nullable=False)
+    status = Column(String, default="pendiente")  # pendiente, completado, fallido
+    method = Column(
+        String, nullable=False
+    )  # Método de pago (Redsys, efectivo, tarjeta)
+    transaction_id = Column(String, nullable=True)  # ID de la transacción
+    amount = Column(Numeric(10, 2), nullable=False)  # Monto pagado
+    created_at = Column(
+        DateTime, default=datetime.now(timezone.utc).replace(tzinfo=None)
+    )
 
-    # Relación con el pedido
+    # Relación con la orden
     order = relationship("Order", back_populates="payment")
