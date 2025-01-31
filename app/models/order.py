@@ -9,7 +9,7 @@ class Order(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     table_number = Column(Integer, nullable=False)  # Número de mesa
-    customer_phone = Column(String(15), nullable=False)  # Nuevo campo
+    customer_phone = Column(String(15), nullable=True)  # Nuevo campo
     status = Column(String, default="pendiente")  # Estado: pendiente, pagado, cancelado
     total = Column(Numeric(10, 2), nullable=False)  # Total del pedido
     created_at = Column(
