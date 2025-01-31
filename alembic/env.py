@@ -7,6 +7,7 @@ from app.models.menu import *
 from app.models.sessions import *
 from app.models.whatsapp import *
 from app.models.order import *
+from app.models.tenants import *
 from app.core.config import settings
 
 # Configuración de logging

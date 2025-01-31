@@ -22,4 +22,5 @@ class CategorySchema(BaseModel):
 
 
 class MenuSchema(BaseModel):
+    tenant_id: int = Field(..., example=1)
     categories: List[CategorySchema]
