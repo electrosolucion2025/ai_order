@@ -39,10 +39,13 @@ async def mark_message_as_processed(db: AsyncSession, message_id: str, tenant_id
     db.add(processed_message)
     await db.commit()
 
-async def get_tenant_id(db: AsyncSession, to_number: str) -> int:
+async def get_tenant_id(db: AsyncSession, to_number: str, from_number: str) -> int:
     """
     Obtiene el tenant_id asociado a un número de teléfono.
     """
+    if from_number == "34623288679":
+        to_number = "15551750561_test"
+        
     result = await db.execute(select(Tenant.id).where(Tenant.phone_number == to_number))
     tenant_id = result.scalar_one_or_none()
     
@@ -71,15 +74,17 @@ async def whatsapp_webhook(
                 if not to_number:
                     continue # Skip messages without a destination number
                 
-                # 🔍 Obtener el tenant_id basado en el número de destino
-                tenant_id = await get_tenant_id(db, to_number)
-                
                 for message in messages:
+                    # 📌 Obtener el número de teléfono del remitente
+                    from_number = message.get("from")
+                    
+                    # 🔍 Obtener el tenant_id basado en el número de destino
+                    tenant_id = await get_tenant_id(db, to_number, from_number)
+                    
+                    # 📌 Obtener el ID del mensaje
                     message_id = message.get("id")
                     if await is_message_processed(db, message_id, tenant_id):
                         continue  # Skip already processed messages
-
-                    from_number = message.get("from")
 
                     # Verificar si el mensaje es un mensaje de texto
                     if "text" in message:
@@ -102,6 +107,7 @@ async def whatsapp_webhook(
                     )
                     await mark_message_as_processed(db, message_id, tenant_id)
 
+        # 🚀 Ejecutar todas las tareas en paralelo
         await asyncio.gather(*tasks)
 
         return JSONResponse(status_code=200, content={"status": "success"})
