@@ -1,3 +1,4 @@
+import json
 import logging
 import openai
 import os
@@ -71,6 +72,7 @@ async def process_whatsapp_message(from_number: str, message_body, tenant_id: in
         # Verificar si el mensaje es una orden
         if "Resumen del Pedido:" in bot_response:
             parsed_order = parse_order_details(bot_response)
+            print("✅✅✅✅✅ Pedido parseado: ✅✅✅✅✅", parsed_order)
 
             if parsed_order:
                 # Guardar el pedido en la base de datos

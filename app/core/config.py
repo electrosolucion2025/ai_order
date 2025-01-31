@@ -28,6 +28,28 @@ class Settings(BaseSettings):
 
     # Configuración de OpenAI
     OPENAI_API_KEY: str = Field(..., env="OPENAI_API_KEY", example="your-openai-key")
+    
+    # Configuración de RedSys
+    REDSYS_MERCHANT_CODE: str = Field(
+        ..., env="REDSYS_MERCHANT_CODE", example="your-redsys-merchant-code"
+    )
+    REDSYS_SECRET_KEY: str = Field(
+        ..., env="REDSYS_SECRET_KEY", example="your-redsys-secret-key"
+    )
+    REDSYS_TERMINAL: int = Field(..., env="REDSYS_TERMINAL", example=1)
+    REDSYS_CURRENCY: int = Field(..., env="REDSYS_CURRENCY", example=978)
+    REDSYS_URL: str = Field(
+        ..., env="REDSYS_URL", example="https://sis.redsys.es/sis/realizarPago"
+    )
+    REDSYS_NOTIFICATION_URL: str = Field(
+        ..., env="REDSYS_NOTIFICATION_URL", example="https://your-domain.com/payment-notification"
+    )
+    REDSYS_SUCCESS_URL: str = Field(
+        ..., env="REDSYS_SUCCESS_URL", example="https://your-domain.com/payment-ok"
+    )
+    REDSYS_FAILURE_URL: str = Field(
+        ..., env="REDSYS_FAILURE_URL", example="https://your-domain.com/payment-ko"
+    )
 
     # Configuración de BD
     DATABASE_URL: str = Field(
