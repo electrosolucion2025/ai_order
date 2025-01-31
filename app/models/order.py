@@ -13,8 +13,8 @@ class Order(Base):
     customer_phone = Column(String(15), nullable=True)
     status = Column(String, default="pendiente")
     total = Column(Numeric(10, 2), nullable=False)
-    created_at = Column(DateTime, default=datetime.now(timezone.utc))
-    updated_at = Column(DateTime, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
+    created_at = Column(DateTime, default=datetime.now(timezone.utc).replace(tzinfo=None))
+    updated_at = Column(DateTime, default=datetime.now(timezone.utc).replace(tzinfo=None), onupdate=datetime.now(timezone.utc).replace(tzinfo=None))
 
     order_items = relationship("OrderItem", back_populates="order")
     payment = relationship("Payment", uselist=False, back_populates="order")
@@ -46,7 +46,7 @@ class Payment(Base):
     method = Column(String, nullable=False)
     transaction_id = Column(String, nullable=True)
     amount = Column(Numeric(10, 2), nullable=False)
-    created_at = Column(DateTime, default=datetime.now(timezone.utc))
+    created_at = Column(DateTime, default=datetime.now(timezone.utc).replace(tzinfo=None))
 
     order = relationship("Order", back_populates="payment")
 

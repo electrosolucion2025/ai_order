@@ -4,7 +4,7 @@ from decimal import Decimal
 from datetime import datetime, timezone
 
 
-async def create_order(from_number: str, parsed_order: dict, db: AsyncSession):
+async def create_order(from_number: str, parsed_order: dict, tenant_id: int, db: AsyncSession):
     """
     Crea un pedido en la base de datos a partir de los datos extraídos.
     """
@@ -24,6 +24,7 @@ async def create_order(from_number: str, parsed_order: dict, db: AsyncSession):
             status="pendiente",
             created_at=now_naive,
             updated_at=now_naive,
+            tenant_id=tenant_id
         )
 
         db.add(new_order)
@@ -48,6 +49,7 @@ async def create_order(from_number: str, parsed_order: dict, db: AsyncSession):
                 subtotal=Decimal(item.get("subtotal", "0.0")),
                 extras=str(item.get("extras", "")),  # Asegurar que no sea None
                 exclusions=str(item.get("sin", "")),  # Asegurar que no sea None
+                tenant_id=tenant_id
             )
             db.add(item_obj)
 
@@ -61,6 +63,7 @@ async def create_order(from_number: str, parsed_order: dict, db: AsyncSession):
             transaction_id=None,
             amount=total,
             created_at=now_naive,  # Asegurar que la fecha es naive
+            tenant_id=tenant_id
         )
         db.add(new_payment)
 

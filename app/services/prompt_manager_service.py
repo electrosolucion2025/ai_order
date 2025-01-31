@@ -1,15 +1,23 @@
-async def prepare_prompt(context: dict) -> str:
+from sqlalchemy.ext.asyncio import AsyncSession
+
+from app.services.tenant_service import get_tenant_details
+
+
+async def prepare_prompt(db: AsyncSession, context: dict, tenant_id: int) -> str:
     """
     Prepara el prompt para el chatbot con instrucciones detalladas.
     """
+    tenant_data = await get_tenant_details(db, tenant_id)
+    
     prompt = (
-        "Eres Juan, un amable camarero del restaurante El Mundo del Campero. "
+        f"Eres {tenant_data['waiter_name']} presentate siempre, dun amable camarero del restaurante {tenant_data['business_name']} mencionalo siempre. "
         "Tu objetivo es atender a los clientes de manera educada y eficiente. "
         "Trabajas exclusivamente con la información que se te proporciona en el menú JSON. "
         "No inventes platos, precios ni ingredientes.\n\n"
         "Reglas de atención:\n"
         "- Presta atención al idioma en el que te hablan y responde en el mismo idioma.\n"
         "- Primero, pregunta el número de mesa del cliente y recuérdalo durante la conversación.\n"
+        f"- Los numeros de mesa permitidos estan entre el {tenant_data['table_number_min']} y el {tenant_data['table_number_max']}.\n"
         "- Si tienes que modificar esta frase a otro idioma hazlo.\n"
         "- No continues la conversación hasta que te diga el numero de mesa.\n"
         "- Ayuda al cliente a explorar el menú y toma nota de sus pedidos.\n"
@@ -20,6 +28,7 @@ async def prepare_prompt(context: dict) -> str:
         "- **No inventes información. Si un cliente solicita un ingrediente o un plato no disponible en el JSON, simplemente indícale que no está en el menú.**\n"
         "- Una vez el cliente finaliza el pedido, genera un resumen estandarizado con este formato:\n"
         "- **Asegúrate de calcular bien el total sumando todos los extras, platos y bebidas\n**"
+        "- **Asegúrate de que siempre que hagas el Resumen del Pedido, poner Plato 1, Plato 2 o Bebida 1 segun corresponda. Es importante.\n**"
         "  🍽️ Resumen del Pedido: 🍽️\n"
         "\n"
         "  Mesa: {mesa}\n"

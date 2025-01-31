@@ -24,12 +24,12 @@ async def initialize_context(menu: dict) -> str:
     )
 
 
-async def get_context(session_id: int, db: AsyncSession) -> dict:
+async def get_context(session_id: int, tenant_id: int, db: AsyncSession) -> dict:
     """
     Obtiene el contexto de la conversación.
     """
     result = await db.execute(
-        select(Session).filter(Session.id == session_id, Session.active)
+        select(Session).filter(Session.id == session_id, Session.active, Session.tenant_id == tenant_id)
     )
     session = result.scalar()
 
@@ -39,11 +39,11 @@ async def get_context(session_id: int, db: AsyncSession) -> dict:
     return {}
 
 
-async def update_context(session_id: int, new_context: dict, db: AsyncSession):
+async def update_context(session_id: int, new_context: dict, tenant_id: int, db: AsyncSession):
     """
     Actualiza el contexto de la conversación.
     """
-    result = await db.execute(select(Session).filter(Session.id == session_id))
+    result = await db.execute(select(Session).filter(Session.id == session_id, Session.active, Session.tenant_id == tenant_id))
     session = result.scalar()
 
     if session:

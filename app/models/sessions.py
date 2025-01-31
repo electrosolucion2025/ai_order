@@ -21,8 +21,8 @@ class Session(Base):
     user_id = Column(String, nullable=False)
     context = Column(Text, nullable=True)
     active = Column(Boolean, default=True)
-    created_at = Column(DateTime, default=datetime.now(timezone.utc))
-    updated_at = Column(DateTime, default=datetime.now(timezone.utc), onupdate=datetime.now(timezone.utc))
+    created_at = Column(DateTime, default=datetime.now(timezone.utc).replace(tzinfo=None))
+    updated_at = Column(DateTime, default=datetime.now(timezone.utc).replace(tzinfo=None), onupdate=datetime.now(timezone.utc).replace(tzinfo=None))
 
     logs = relationship("SessionLog", back_populates="session")
 
@@ -35,6 +35,6 @@ class SessionLog(Base):
     session_id = Column(Integer, ForeignKey("sessions.id", ondelete="CASCADE"))
     user_message = Column(Text, nullable=False)
     bot_response = Column(Text, nullable=True)
-    created_at = Column(DateTime, default=datetime.now(timezone.utc))
+    created_at = Column(DateTime, default=datetime.now(timezone.utc).replace(tzinfo=None))
 
     session = relationship("Session", back_populates="logs")
