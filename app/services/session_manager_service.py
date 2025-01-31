@@ -11,7 +11,9 @@ async def get_or_create_session(user_id: str, tenant_id: int, db: AsyncSession):
     Busca una sesión activa para el usuario o crea una nueva.
     """
     result = await db.execute(
-        select(Session).filter(Session.user_id == user_id, Session.active, Session.tenant_id == tenant_id)
+        select(Session).filter(
+            Session.user_id == user_id, Session.active, Session.tenant_id == tenant_id
+        )
     )
     session = result.scalar()
 
@@ -36,7 +38,9 @@ async def close_session(user_id: str, tenant_id: int, db: AsyncSession):
     Marca la sesión como inactiva y actualiza los registros relacionados.
     """
     result = await db.execute(
-        select(Session).filter(Session.user_id == user_id, Session.active, Session.tenant_id == tenant_id)
+        select(Session).filter(
+            Session.user_id == user_id, Session.active, Session.tenant_id == tenant_id
+        )
     )
     session = result.scalar()
 

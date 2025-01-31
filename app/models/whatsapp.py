@@ -11,9 +11,10 @@ class ProcessedMessage(Base):
     __tablename__ = "processed_messages"
 
     message_id = Column(String, primary_key=True, index=True)
-    tenant_id = Column(Integer, ForeignKey("tenants.id"), nullable=False)  # Relación con el tenant
+    tenant_id = Column(
+        Integer, ForeignKey("tenants.id"), nullable=False
+    )  # Relación con el tenant
     created_at = Column(DateTime(timezone=True), server_default=func.now())
-
 
 
 # Function to delete old records

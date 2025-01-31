@@ -15,7 +15,11 @@ if not logger.handlers:
 
 
 async def save_message_log(
-    session_id: int, user_message: str, bot_response: str, tenant_id: int, db: AsyncSession
+    session_id: int,
+    user_message: str,
+    bot_response: str,
+    tenant_id: int,
+    db: AsyncSession,
 ):
     """
     Guarda un mensaje en la tabla de logs de sesión.

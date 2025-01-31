@@ -21,7 +21,9 @@ router = APIRouter()
 logger = logging.getLogger(__name__)
 
 
-async def is_message_processed(db: AsyncSession, message_id: str, tenant_id: int) -> bool:
+async def is_message_processed(
+    db: AsyncSession, message_id: str, tenant_id: int
+) -> bool:
     """
     Verifica si un mensaje ya fue procesado, filtrando por tenant_id.
     """
@@ -39,20 +41,22 @@ async def mark_message_as_processed(db: AsyncSession, message_id: str, tenant_id
     db.add(processed_message)
     await db.commit()
 
+
 async def get_tenant_id(db: AsyncSession, to_number: str, from_number: str) -> int:
     """
     Obtiene el tenant_id asociado a un número de teléfono.
     """
     if from_number == "34623288679":
         to_number = "15551750561_test"
-        
+
     result = await db.execute(select(Tenant.id).where(Tenant.phone_number == to_number))
     tenant_id = result.scalar_one_or_none()
-    
+
     if not tenant_id:
         raise HTTPException(status_code=404, detail="Tenant no encontrado")
-    
+
     return tenant_id
+
 
 @router.post("/webhook")
 async def whatsapp_webhook(
@@ -68,19 +72,19 @@ async def whatsapp_webhook(
             for change in entry.changes:
                 value = change.value
                 messages = value.get("messages", [])
-                
+
                 # 📌 Obtener el número de destino al que escriben los clientes
                 to_number = value.get("metadata", {}).get("display_phone_number")
                 if not to_number:
-                    continue # Skip messages without a destination number
-                
+                    continue  # Skip messages without a destination number
+
                 for message in messages:
                     # 📌 Obtener el número de teléfono del remitente
                     from_number = message.get("from")
-                    
+
                     # 🔍 Obtener el tenant_id basado en el número de destino
                     tenant_id = await get_tenant_id(db, to_number, from_number)
-                    
+
                     # 📌 Obtener el ID del mensaje
                     message_id = message.get("id")
                     if await is_message_processed(db, message_id, tenant_id):
@@ -103,7 +107,9 @@ async def whatsapp_webhook(
 
                     # ✅ Crear tareas para procesar cada mensaje, incluyendo el `tenant_id`
                     tasks.append(
-                        process_whatsapp_message(from_number, message_body, tenant_id, db)
+                        process_whatsapp_message(
+                            from_number, message_body, tenant_id, db
+                        )
                     )
                     await mark_message_as_processed(db, message_id, tenant_id)
 
@@ -118,7 +124,9 @@ async def whatsapp_webhook(
 
 
 @router.post("/send")
-async def send_whatsapp_message(to: str, body: str, tenant_id: int, db: AsyncSession = Depends(get_db)):
+async def send_whatsapp_message(
+    to: str, body: str, tenant_id: int, db: AsyncSession = Depends(get_db)
+):
     """
     Endpoint para enviar mensajes de WhatsApp.
     """

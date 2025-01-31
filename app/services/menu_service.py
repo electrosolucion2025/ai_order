@@ -22,17 +22,23 @@ async def fetch_menu_as_json(tenant_id: int, db: AsyncSession) -> List[Dict]:
         select(Category)
         .where(Category.tenant_id == tenant_id)  # Filtrar por tenant_id
         .options(
-            selectinload(Category.items).selectinload(MenuItem.extras)  # Cargar relaciones sin joins
+            selectinload(Category.items).selectinload(
+                MenuItem.extras
+            )  # Cargar relaciones sin joins
         )
     )
-    
+
     categories = result.scalars().all()
 
     # Filtrar items y extras en Python para evitar filtrado innecesario en SQL
     for category in categories:
-        category.items = [item for item in category.items if item.tenant_id == tenant_id]
+        category.items = [
+            item for item in category.items if item.tenant_id == tenant_id
+        ]
         for item in category.items:
-            item.extras = [extra for extra in item.extras if extra.tenant_id == tenant_id]
+            item.extras = [
+                extra for extra in item.extras if extra.tenant_id == tenant_id
+            ]
 
     # Construcción del JSON del menú
     return [

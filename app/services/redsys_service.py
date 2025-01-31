@@ -1,7 +1,6 @@
 import base64
 import hashlib
 import hmac
-import json
 import requests
 
 from fastapi import HTTPException
@@ -13,63 +12,64 @@ from app.core.config import settings
 
 
 class RedsysService:
+    def __init__(self):
+        """
+        Inicializa el cliente de Redsys con la clave secreta.
+        """
+        self.client = RedirectClient(settings.REDSYS_SECRET_KEY)
+
     @staticmethod
     def generate_signature(key: str, data: str) -> str:
         """
         Genera la firma HMAC-SHA256 para Redsys
         """
-        # Decodificar la clave y codificar los datos
         key_bytes = base64.b64decode(key)
-        # Codificar los datos
         data_bytes = data.encode("utf-8")
-        # Generar la firma
         digest = hmac.new(key_bytes, data_bytes, hashlib.sha256).digest()
-        # Devolver la firma en base64
         return base64.b64encode(digest).decode("utf-8")
-    
-    @staticmethod
-    def create_payment(order_id: str, amount: float, description: str):
+
+    def create_payment(self, order_id: str, amount: float):
         """
-        Crea la estructura de datos para el pago y genera la firma
+        Crea la estructura de datos para el pago y genera la firma.
         """
         merchant_parameters = {
-            "DS_MERCHANT_AMOUNT": int(D(amount * 100).to_integral_value(ROUND_HALF_UP) * 100),
-            "DS_MERCHANT_ORDER": order_id,
-            "DS_MERCHANT_MERCHANTCODE": settings.REDSYS_MERCHANT_CODE,
-            "DS_MERCHANT_TRANSACTIONTYPE": STANDARD_PAYMENT,
-            "DS_MERCHANT_CURRENCY": EUR,
-            "DS_MERCHANT_TERMINAL": settings.REDSYS_TERMINAL,
-            "DS_MERCHANT_MERCHANTURL": settings.REDSYS_NOTIFICATION_URL,
-            "DS_MERCHANT_URLOK": settings.REDSYS_SUCCESS_URL,
-            "DS_MERCHANT_URLKO": settings.REDSYS_FAILURE_URL,
-            "DS_MERCHANT_PRODUCTDESCRIPTION": "Pago de prueba",
-            "DS_MERCHANT_NAME": "ElectroSolucion",
-            "DS_MERCHANT_TITULAR": "ElectroSolucion",
+            "amount": D(amount).quantize(
+                D(".01"), ROUND_HALF_UP
+            ),  # Redsys usa céntimos
+            "order": order_id,
+            "merchant_code": settings.REDSYS_MERCHANT_CODE,
+            "transaction_type": STANDARD_PAYMENT,
+            "currency": EUR,
+            "terminal": "1",
+            "merchant_url": settings.REDSYS_NOTIFICATION_URL,
+            "merchant_name": "electroSolucion",
+            "titular": "electroSolucion",
+            "product_description": "Prueba de pago",
         }
-        
-        merchant_parameters_json = json.dumps(merchant_parameters)
-        merchant_parameters_b64 = base64.b64encode(merchant_parameters_json.encode("utf-8")).decode("utf-8")
-        
-        signature = RedsysService.generate_signature(settings.REDSYS_SECRET_KEY, merchant_parameters_b64)
-        
-        return {
-            "Ds_SignatureVersion": "HMAC_SHA256_V1",
-            "Ds_MerchantParameters": merchant_parameters_b64,
-            "Ds_Signature": signature,
-        }
-        
-    @staticmethod
-    def process_payment(order_id: str, amount: float, description: str):
+
+        # Prepara la solicitud de Redsys
+        prepared_request = self.client.prepare_request(merchant_parameters)
+
+        # Decodifica los parámetros y firma para ser enviados al formulario
+        prepared_request["Ds_MerchantParameters"] = prepared_request[
+            "Ds_MerchantParameters"
+        ].decode()
+        prepared_request["Ds_Signature"] = prepared_request["Ds_Signature"].decode()
+
+        return prepared_request
+
+    def process_payment(self, order_id: str, amount: float, description: str):
         """
-        Envia la solicitud de pago a Redsys y devuelve la URL de pago
+        Envia la solicitud de pago a Redsys y devuelve la URL de pago.
         """
-        data = RedsysService.create_payment(order_id, amount, description)
-        
+        data = self.create_payment(order_id, amount)
+
         try:
             response = requests.post(settings.REDSYS_URL, data=data)
             response.raise_for_status()
-            
-            return response.url # URL de pago
-        
+            return response.url  # URL de pago
+
         except requests.RequestException as e:
-            raise HTTPException(status_code=400, detail=f"Error en la solicitud de pago: {e}")
+            raise HTTPException(
+                status_code=400, detail=f"Error en la solicitud de pago: {e}"
+            )

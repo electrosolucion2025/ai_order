@@ -22,14 +22,19 @@ async def upload_menu(menu: MenuSchema, db: AsyncSession = Depends(get_db)):
         # 🔍 Verificar si el tenant_id existe en la base de datos
         result = await db.execute(select(Tenant).where(Tenant.id == tenant_id))
         tenant = result.scalar_one_or_none()
-        
+
         if not tenant:
-            raise HTTPException(status_code=400, detail="❌ Tenant ID inválido. No existe en la base de datos.")
+            raise HTTPException(
+                status_code=400,
+                detail="❌ Tenant ID inválido. No existe en la base de datos.",
+            )
 
         for category_data in menu.categories:
             # 🟢 Verificar si la categoría ya existe
             category_result = await db.execute(
-                select(Category).where(Category.name == category_data.name, Category.tenant_id == tenant_id)
+                select(Category).where(
+                    Category.name == category_data.name, Category.tenant_id == tenant_id
+                )
             )
             category = category_result.scalar_one_or_none()
 

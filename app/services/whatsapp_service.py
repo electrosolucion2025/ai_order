@@ -1,4 +1,3 @@
-import json
 import logging
 import openai
 import os
@@ -9,6 +8,7 @@ from decimal import Decimal
 from fastapi import HTTPException
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
+from urllib.parse import urlencode
 
 from app.core.config import settings
 from app.models.tenants import Tenant
@@ -33,7 +33,9 @@ if not logger.handlers:
 openai.api_key = settings.OPENAI_API_KEY
 
 
-async def process_whatsapp_message(from_number: str, message_body, tenant_id: int, db: AsyncSession):
+async def process_whatsapp_message(
+    from_number: str, message_body, tenant_id: int, db: AsyncSession
+):
     """
     Procesa un mensaje de WhatsApp (texto o audio) y maneja la lógica de respuesta.
     """
@@ -46,7 +48,9 @@ async def process_whatsapp_message(from_number: str, message_body, tenant_id: in
             # Obtener URL del audio
             audio_url = await get_audio_url(media_id)
             if not audio_url:
-                await send_whatsapp_message(from_number, "No se pudo obtener el audio.", tenant_id, db)
+                await send_whatsapp_message(
+                    from_number, "No se pudo obtener el audio.", tenant_id, db
+                )
                 return
 
             # Transcribir el audio
@@ -67,7 +71,9 @@ async def process_whatsapp_message(from_number: str, message_body, tenant_id: in
         session = await get_or_create_session(from_number, tenant_id, db)
 
         # Obtener respuesta de OpenAI
-        bot_response = await generate_openai_response(session.id, message_body, tenant_id, db)
+        bot_response = await generate_openai_response(
+            session.id, message_body, tenant_id, db
+        )
 
         # Verificar si el mensaje es una orden
         if "Resumen del Pedido:" in bot_response:
@@ -96,14 +102,27 @@ async def process_whatsapp_message(from_number: str, message_body, tenant_id: in
                         bot_response,
                     )
 
+                    base_url = f"{settings.BASE_URL}/payments/payment-form"
+                    query_string = urlencode(
+                        {
+                            "order_id": order_id_formatted,
+                            "amount": order.total,
+                            "user_id": from_number,
+                        }
+                    )
+                    payment_url = f"{base_url}?{query_string}"
+
                     confirmation_msg = (
-                        f"✅ Tu pedido ha sido registrado con éxito.\n"
-                        f"Pedido N° {order_id_formatted}\n"
-                        f"📌 Si necesitas hacer cambios, avísame antes de realizar el pago.\n"
-                        f"🚀 En cuanto se registre el pago, nos pondremos manos a la obra.\n"
+                        f"✅ Tu pedido ha sido registrado con éxito.\n\n"
+                        f"Pedido N° {order_id_formatted}\n\n"
+                        f"📌 Si necesitas hacer cambios, avísame antes de realizar el pago.\n\n"
+                        f"🚀 En cuanto se registre el pago, nos pondremos manos a la obra.\n\n"
+                        f"🔗 Puedes realizar el pago aquí:\n {payment_url}"
                     )
 
-                    await send_whatsapp_message(from_number, confirmation_msg, tenant_id, db)
+                    await send_whatsapp_message(
+                        from_number, confirmation_msg, tenant_id, db
+                    )
 
                 else:
                     await send_whatsapp_message(
@@ -136,10 +155,15 @@ async def send_message(to: str, body: str, tenant_id: int, db: AsyncSession):
             select(Tenant.whatsapp_token).where(Tenant.id == tenant_id)
         )
         whatsapp_token = result.scalar_one_or_none()
-        
+
         if not whatsapp_token:
-            logger.error(f"❌ No se encontró el token de WhatsApp para tenant_id {tenant_id}")
-            raise HTTPException(status_code=400, detail="No se encontró el token de WhatsApp para este tenant.")
+            logger.error(
+                f"❌ No se encontró el token de WhatsApp para tenant_id {tenant_id}"
+            )
+            raise HTTPException(
+                status_code=400,
+                detail="No se encontró el token de WhatsApp para este tenant.",
+            )
 
         url = settings.WHATSAPP_API_URL
         headers = {
@@ -158,8 +182,10 @@ async def send_message(to: str, body: str, tenant_id: int, db: AsyncSession):
         logger.debug(f"🔍 Headers enviados: {headers}")
 
         response = requests.post(url, json=payload, headers=headers)
-        
-        logger.debug(f"🔍 Respuesta de WhatsApp API: {response.status_code} - {response.text}")
+
+        logger.debug(
+            f"🔍 Respuesta de WhatsApp API: {response.status_code} - {response.text}"
+        )
 
         if response.status_code != 200:
             logger.error(f"❌ Error enviando mensaje: {response.text}")
@@ -173,6 +199,7 @@ async def send_message(to: str, body: str, tenant_id: int, db: AsyncSession):
     except Exception as e:
         logger.error(f"❌ Error en send_message: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail=f"Error enviando mensaje: {str(e)}")
+
 
 def parse_order_details(order_text: str) -> dict:
     """

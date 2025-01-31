@@ -40,6 +40,8 @@ async def generate_openai_response(
     context.setdefault("conversation", []).append(
         {"user": user_message, "bot": bot_response}
     )
-    await update_context(session_id, {"conversation": context["conversation"]}, tenant_id, db)
+    await update_context(
+        session_id, {"conversation": context["conversation"]}, tenant_id, db
+    )
 
     return bot_response

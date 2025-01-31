@@ -47,9 +47,7 @@ def create_app() -> FastAPI:
     )
     # Registrar rutas
     app.include_router(
-        menu.router,
-        prefix=f"{settings.API_VERSION}/menu",
-        tags=["Menu"]
+        menu.router, prefix=f"{settings.API_VERSION}/menu", tags=["Menu"]
     )
     app.include_router(
         whatsapp.router,

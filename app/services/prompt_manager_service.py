@@ -8,7 +8,7 @@ async def prepare_prompt(db: AsyncSession, context: dict, tenant_id: int) -> str
     Prepara el prompt para el chatbot con instrucciones detalladas.
     """
     tenant_data = await get_tenant_details(db, tenant_id)
-    
+
     prompt = (
         f"Eres {tenant_data['waiter_name']} presentate la primera vez, trabajas en y seras la persona que atienda en {tenant_data['business_name']} mencionalo siempre. "
         "Tu objetivo es atender a los clientes de manera educada y eficiente. "

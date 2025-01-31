@@ -28,7 +28,7 @@ class Settings(BaseSettings):
 
     # Configuración de OpenAI
     OPENAI_API_KEY: str = Field(..., env="OPENAI_API_KEY", example="your-openai-key")
-    
+
     # Configuración de RedSys
     REDSYS_MERCHANT_CODE: str = Field(
         ..., env="REDSYS_MERCHANT_CODE", example="your-redsys-merchant-code"
@@ -42,7 +42,9 @@ class Settings(BaseSettings):
         ..., env="REDSYS_URL", example="https://sis.redsys.es/sis/realizarPago"
     )
     REDSYS_NOTIFICATION_URL: str = Field(
-        ..., env="REDSYS_NOTIFICATION_URL", example="https://your-domain.com/payment-notification"
+        ...,
+        env="REDSYS_NOTIFICATION_URL",
+        example="https://your-domain.com/payment-notification",
     )
     REDSYS_SUCCESS_URL: str = Field(
         ..., env="REDSYS_SUCCESS_URL", example="https://your-domain.com/payment-ok"
@@ -50,6 +52,9 @@ class Settings(BaseSettings):
     REDSYS_FAILURE_URL: str = Field(
         ..., env="REDSYS_FAILURE_URL", example="https://your-domain.com/payment-ko"
     )
+
+    # Base
+    BASE_URL: str = Field(..., env="BASE_URL", example="https://your-domain.com")
 
     # Configuración de BD
     DATABASE_URL: str = Field(
