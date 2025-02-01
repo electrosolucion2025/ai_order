@@ -25,7 +25,7 @@ class Order(Base):
         onupdate=datetime.now(timezone.utc).replace(tzinfo=None),
     )
 
-    order_items = relationship("OrderItem", back_populates="order")
+    order_items = relationship("OrderItem", back_populates="order", cascade="all, delete-orphan")
     payment = relationship("Payment", uselist=False, back_populates="order")
 
 

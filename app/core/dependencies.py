@@ -1,3 +1,4 @@
+from typing import AsyncGenerator
 from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from sqlalchemy.orm import sessionmaker
 
@@ -10,6 +11,6 @@ async_session = sessionmaker(engine, class_=AsyncSession, expire_on_commit=False
 
 
 # Dependencia de sesión de base de datos
-async def get_db():
+async def get_db() -> AsyncGenerator[AsyncSession, None]:
     async with async_session() as session:
         yield session
