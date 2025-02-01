@@ -85,12 +85,12 @@ async def process_whatsapp_message(
                 # (no iniciar nueva transacción si ya hay una activa)
                 if not db.in_transaction():
                     async with db.begin():
-                        order, order_id_formatted = await create_order(
+                        order, order_number = await create_order(
                             from_number, parsed_order, tenant_id, db
                         )
 
                 else:
-                    order, order_id_formatted = await create_order(
+                    order, order_number = await create_order(
                         from_number, parsed_order, tenant_id, db
                     )
 
@@ -105,16 +105,16 @@ async def process_whatsapp_message(
                     base_url = f"{settings.BASE_URL}/payments/payment-form"
                     query_string = urlencode(
                         {
-                            "order_id": order_id_formatted,
+                            "order_id": order_number,
                             "amount": order.total,
-                            "user_id": from_number,
+                            "tenant_id": tenant_id
                         }
                     )
                     payment_url = f"{base_url}?{query_string}"
 
                     confirmation_msg = (
                         f"✅ Tu pedido ha sido registrado con éxito.\n\n"
-                        f"Pedido N° {order_id_formatted}\n\n"
+                        f"Pedido N° {order_number}\n\n"
                         f"📌 Si necesitas hacer cambios, avísame antes de realizar el pago.\n\n"
                         f"🚀 En cuanto se registre el pago, nos pondremos manos a la obra.\n\n"
                         f"🔗 Puedes realizar el pago aquí:\n {payment_url}"

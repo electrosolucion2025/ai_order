@@ -1,6 +1,7 @@
 import base64
 import hashlib
 import hmac
+import json
 import requests
 
 from fastapi import HTTPException
@@ -28,10 +29,12 @@ class RedsysService:
         digest = hmac.new(key_bytes, data_bytes, hashlib.sha256).digest()
         return base64.b64encode(digest).decode("utf-8")
 
-    def create_payment(self, order_id: str, amount: float):
+    def create_payment(self, order_id: str, amount: float, tenant_id: int):
         """
         Crea la estructura de datos para el pago y genera la firma.
         """
+        merchant_data = f"{order_id}|{tenant_id}"
+        
         merchant_parameters = {
             "amount": D(amount).quantize(
                 D(".01"), ROUND_HALF_UP
@@ -42,6 +45,7 @@ class RedsysService:
             "currency": EUR,
             "terminal": "1",
             "merchant_url": settings.REDSYS_NOTIFICATION_URL,
+            "merchant_data": merchant_data,
             "merchant_name": "electroSolucion",
             "titular": "electroSolucion",
             "product_description": "Prueba de pago",
@@ -58,7 +62,7 @@ class RedsysService:
 
         return prepared_request
 
-    def process_payment(self, order_id: str, amount: float, description: str):
+    def process_payment(self, order_id: str, amount: float):
         """
         Envia la solicitud de pago a Redsys y devuelve la URL de pago.
         """

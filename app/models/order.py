@@ -11,6 +11,7 @@ class Order(Base):
     tenant_id = Column(
         Integer, ForeignKey("tenants.id"), nullable=False
     )  # Relación con el tenant
+    order_number = Column(String(12), unique=True, index=True)  # Nuevo campo para el número de pedido
     table_number = Column(Integer, nullable=False)
     customer_phone = Column(String(15), nullable=True)
     status = Column(String, default="pendiente")
