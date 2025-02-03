@@ -12,6 +12,7 @@ from urllib.parse import urlencode
 
 from app.core.config import settings
 from app.models.tenants import Tenant
+from app.services.database_service import DatabaseService
 from app.services.log_manager_service import save_message_log
 from app.services.openai_service import generate_openai_response
 from app.services.order_service import create_order
@@ -46,7 +47,7 @@ async def process_whatsapp_message(
             media_id = message_body["media_id"]
 
             # Obtener URL del audio
-            audio_url = await get_audio_url(media_id)
+            audio_url = await get_audio_url(media_id, tenant_id, db)
             if not audio_url:
                 await send_whatsapp_message(
                     from_number, "No se pudo obtener el audio.", tenant_id, db
@@ -54,7 +55,7 @@ async def process_whatsapp_message(
                 return
 
             # Transcribir el audio
-            transcribed_text = await transcribe_audio(audio_url)
+            transcribed_text = await transcribe_audio(audio_url, tenant_id, db)
             if not transcribed_text:
                 await send_whatsapp_message(
                     from_number, "No se pudo transcribir el audio.", tenant_id, db
@@ -293,13 +294,19 @@ def parse_order_details(order_text: str) -> dict:
         return {}  # Retorna un JSON vacío si hay un error
 
 
-async def get_audio_url(media_id: str) -> str:
+async def get_audio_url(media_id: str, tenant_id: int, db: AsyncSession) -> str:
     """
     Obtiene la URL de descarga del archivo de audio desde WhatsApp API.
     """
     try:
+        result = await db.execute(
+            select(Tenant.whatsapp_token).where(Tenant.id == tenant_id)
+        )
+        whatsapp_token = result.scalar_one_or_none()
+        
+        
         url = f"https://graph.facebook.com/{settings.WHATSAPP_VERSION_API}/{media_id}"
-        headers = {"Authorization": f"Bearer {settings.WHATSAPP_TOKEN}"}
+        headers = {"Authorization": f"Bearer {whatsapp_token}"}
 
         response = requests.get(url, headers=headers)
         response_data = response.json()
@@ -317,13 +324,18 @@ async def get_audio_url(media_id: str) -> str:
         return None
 
 
-async def transcribe_audio(audio_url: str) -> str:
+async def transcribe_audio(audio_url: str, tenant_id: int, db: AsyncSession) -> str:
     """
     Transcribe un archivo de audio a texto utilizando OpenAI Whisper.
     """
     try:
+        result = await db.execute(
+            select(Tenant.whatsapp_token).where(Tenant.id == tenant_id)
+        )
+        whatsapp_token = result.scalar_one_or_none()
+        
         # Descargar el archivo de audio con autenticación
-        headers = {"Authorization": f"Bearer {settings.WHATSAPP_TOKEN}"}
+        headers = {"Authorization": f"Bearer {whatsapp_token}"}
         response = requests.get(audio_url, headers=headers)
 
         if response.status_code != 200:
