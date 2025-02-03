@@ -12,6 +12,7 @@ from app.core.dependencies import get_db
 from app.models.tenants import Tenant
 from app.models.whatsapp import ProcessedMessage
 from app.schemas.whatsapp import WhatsAppPayload
+from app.services.database_service import DatabaseService
 from app.services.whatsapp_service import (
     process_whatsapp_message,
     send_message,
@@ -130,6 +131,9 @@ async def send_whatsapp_message(
     """
     Endpoint para enviar mensajes de WhatsApp.
     """
+    db_service = DatabaseService()
+    db = await db_service.get_session()
+    
     await send_message(to, body, tenant_id, db)
     return {"message": "Mensaje enviado correctamente"}
 

@@ -22,7 +22,6 @@ async def generate_openai_response(
 
     # Construir el prompt con menú y historial de la conversación
     prompt = await prepare_prompt(db, context, tenant_id)
-    print(f"🤖🤖🤖🤖🤖🤖🤖🤖🤖 OpenAI Prompt: {prompt}")
 
     # Enviar el prompt a OpenAI
     response = openai.chat.completions.create(

@@ -45,6 +45,7 @@ async def close_session(user_id: str, tenant_id: int, db: AsyncSession):
     session = result.scalar()
 
     if session:
+        print("🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉🎉Cerrando sesión...")
         session.active = False
 
         await db.commit()

@@ -78,7 +78,6 @@ async def process_whatsapp_message(
         # Verificar si el mensaje es una orden
         if "Resumen del Pedido:" in bot_response:
             parsed_order = parse_order_details(bot_response)
-            print("✅✅✅✅✅ Pedido parseado: ✅✅✅✅✅", parsed_order)
 
             if parsed_order:
                 # Guardar el pedido en la base de datos
@@ -134,10 +133,6 @@ async def process_whatsapp_message(
 
         # Enviar respuesta al usuario
         await send_whatsapp_message(from_number, bot_response, tenant_id, db)
-
-        # Si el usuario finaliza, cerrar sesión
-        if message_body.lower() == "finalizar":
-            await close_session(from_number, tenant_id, db)
 
     except Exception as e:
         logger.error(f"❌ Error procesando mensaje de WhatsApp: {e}", exc_info=True)
